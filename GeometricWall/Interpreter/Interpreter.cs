@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
+using System.Xml.Linq;
 using static GeometricWall.Token;
 
 namespace GeometricWall
@@ -35,7 +38,9 @@ namespace GeometricWall
         public dynamic Visit_PointAST(dynamic node)
         {
             string name = node.ID.VarName;
-            SymbolTable.AddGeometric(name, "point");
+            Random random = new Random();
+            Point p1 = new Point(name, random.Next(50, 500), random.Next(50, 500));
+            SymbolTable.AddSymbol(name, p1, SymbolTable.VariableType.Point);
 
             return node;
         }
@@ -43,64 +48,106 @@ namespace GeometricWall
         public dynamic Visit_CircleAST(dynamic node)
         {
             string name = node.ID.VarName;
-            SymbolTable.AddGeometric(name, "circle");
 
-            return node;
+            if (name == "circle")
+            {
+                var center = Visit(node.Center);
+                var radius = Visit(node.Radius);
+                Circle circle = new("", center, radius);
+                return circle;
+            }
+            else
+            {
+                Random random = new Random();
+                Circle c1 = new Circle(name, new Point("p1", random.Next(50, 500), random.Next(50, 500)), random.Next(25, 50));
+                SymbolTable.AddSymbol(name, c1, SymbolTable.VariableType.Circle);
+                return node;
+            }
         }
 
         public dynamic Visit_SegmentAST(dynamic node)
         {
             string name = node.ID.VarName;
-            SymbolTable.AddGeometric(name, "segment");
 
-            return node;
+            if (name == "segment")
+            {
+                var p1 = Visit(node.Point1);
+                var p2 = Visit(node.Point2);
+                Segment segment = new("",  p1, p2);
+                return segment;
+            }
+            else
+            {
+                Random random = new Random();
+                Segment s1 = new Segment(name, new Point("p1", random.Next(50, 500), random.Next(50, 500)), new Point("p2", random.Next(50, 500), random.Next(50, 500)));
+                SymbolTable.AddSymbol(name, s1, SymbolTable.VariableType.Segment);
+                return node;
+            }
         }
 
         public dynamic Visit_LineAST(dynamic node)
         {
             string name = node.ID.VarName;
-            SymbolTable.AddGeometric(name, "line");
 
-            return node;
+            if (name == "line")
+            {
+                var p1 = Visit(node.Point1);
+                var p2 = Visit(node.Point2);
+                Line line = new("", p1, p2);
+                return line;
+            }
+            else
+            {
+                Random random = new Random();
+                Line l1 = new Line(name, new Point("p1", random.Next(50, 500), random.Next(50, 500)), new Point("p2", random.Next(50, 500), random.Next(50, 500)));
+                SymbolTable.AddSymbol(name, l1, SymbolTable.VariableType.Segment);
+                return node;
+            }
         }
 
         public dynamic Visit_RayAST(dynamic node)
         {
             string name = node.ID.VarName;
-            SymbolTable.AddGeometric(name, "ray");
 
-            return node;
+            if (name == "line")
+            {
+                var p1 = Visit(node.Point1);
+                var p2 = Visit(node.Point2);
+                Ray ray = new("", p1, p2);
+                return ray;
+            }
+            else
+            {
+                Random random = new Random();
+                Ray ray = new Ray(name, new Point("p1", random.Next(50, 500), random.Next(50, 500)), new Point("p2", random.Next(50, 500), random.Next(50, 500)));
+                SymbolTable.AddSymbol(name, ray, SymbolTable.VariableType.Segment);
+                return node;
+            }
         }
 
-        public dynamic Visit_DrawStatement(DrawStatement node)
+        public dynamic Visit_DrawStatement(dynamic node)
         {
             if (node.Figure != "")
             {
-                Point[] points = new Point[2];
-
-                for (int i = 0; i < points.Length; i++)
-                {
-                    Point p1 = SymbolTable.GetPoint(node.Coordenada.ElementAt(i));
-                    points[i] = p1;
-                }
+                var param1 = Visit(node.Param1);
+                var param2 = Visit(node.Param2);
 
                 switch (node.Figure)
                 {
                     case "line":
-                        Line line = new Line(" ", points[0], points[1]);
+                        Line line = new(" ", param1, param2);
                         Draw.DrawLine(line);
                         break;
                     case "segment":
-                        Segment segment = new(" ", points[0], points[1]);
+                        Segment segment = new(" ", param1, param2);
                         Draw.DrawSegment(segment);
                         break;
                     case "ray":
-                        Ray ray = new(" ", points[0], points[1]);
+                        Ray ray = new(" ", param1, param2);
                         Draw.DrawRay(ray);
                         break;
                     case "circle":
-                        // TODO HACK
-                        Circle c1 = new(" ", points[0], 20);
+                        Circle c1 = new(" ", param1, param2);
                         Draw.DrawCircle(c1);
                         break;
                 }
@@ -109,25 +156,25 @@ namespace GeometricWall
             {
                 foreach(var item in node.Geometrics)
                 {
-                    var geometric = SymbolTable.GetGeometric(item);
+                    var geometric = Visit(item);
                     string method_name = geometric.GetType().Name;
 
                     switch(method_name)
                     {
                         case "Point":
-                            Draw.DrawPoint(geometric);
+                            Draw.DrawPoint((Point)geometric);
                             break;
                         case "Circle":
-                            Draw.DrawCircle(geometric);
+                            Draw.DrawCircle((Circle)geometric);
                             break;
                         case "Segment":
-                            Draw.DrawSegment(geometric);
+                            Draw.DrawSegment((Segment)geometric);
                             break;
                         case "Line":
-                            Draw.DrawLine(geometric);
+                            Draw.DrawLine((Line)geometric);
                             break;
                         case "Ray":
-                            Draw.DrawRay(geometric);
+                            Draw.DrawRay((Ray)geometric);
                             break;
                         default:
                             throw new ArgumentException("El objeto indicado no es valido");
@@ -138,15 +185,59 @@ namespace GeometricWall
             return node;
         }
 
-        public dynamic Visit_MeasureStatement(MeasureStatement node)
+        public dynamic Visit_MeasureStatement(dynamic node)
         {
-            Point p1 = SymbolTable.GetPoint(node.P1.Value);
-            Point p2 = SymbolTable.GetPoint(node.P2.Value);
+            string point1 = node.P1.VarName;
+            string point2 = node.P1.VarName;
+            
+            Point p1 = (Point)SymbolTable.GetSymbol(point1).Item1;
+            Point p2 = (Point)SymbolTable.GetSymbol(point2).Item1;
 
             double distance = Math.Sqrt(Math.Pow(p2.X - p2.Y, 2) + Math.Pow(p2.Y - p1.Y, 2));
-            MessageBox.Show(distance.ToString());
 
             return distance;
+        }
+
+        public dynamic Visit_Assign(dynamic node)
+        {
+            string name = node.Variable.VarName;
+            var value = Visit(node.Expression);
+
+            string method_name = value.GetType().Name;
+
+            switch (method_name)
+            {
+                case "Circle":
+                    value.ID = name;
+                    SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Circle);
+                    break;
+                case "Segment":
+                    value.ID = name;
+                    SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Segment);
+                    break;
+                case "Line":
+                    value.ID = name;
+                    SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Line);
+                    break;
+                case "Ray":
+                    value.ID = name;
+                    SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Ray);
+                    break;
+            }
+
+            if (value is double)
+            {
+                SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Double);
+            }
+
+
+            return name;
+        }
+
+        public dynamic Visit_Var(dynamic node)
+        {
+            string name = node.VarName;
+            return SymbolTable.GetSymbol(name).Item1;
         }
 
         public dynamic Visit_BinOp(dynamic node)
@@ -193,6 +284,7 @@ namespace GeometricWall
         public dynamic Interpret()
         {
             AST tree = Parser.Parse();
+            SymbolTable.PushTable();
             return Visit(tree);
         }
     }

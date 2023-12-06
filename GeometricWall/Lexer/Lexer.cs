@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static GeometricWall.Token;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace GeometricWall
 {
@@ -44,6 +45,15 @@ namespace GeometricWall
             {
                 Advance();
             }
+        }
+
+        private char Peek()
+        {
+            int peek_pos = pos + 1;
+            if (peek_pos > text.Length - 1)
+                return ' ';
+            else
+                return text[peek_pos];
         }
 
         public string Integer()
@@ -168,6 +178,25 @@ namespace GeometricWall
                 {
                     Advance();
                     return new Token(TokenType.RKEY, "}");
+                }
+
+                if (currentChar == '=')
+                {
+                    if (Peek() == '>')
+                    {
+                        Advance(); Advance();
+                        return new Token(Token.TokenType.LAMBDA, "=>");
+                    }
+                    else if (Peek() == '=')
+                    {
+                        Advance(); Advance();
+                        return new Token(Token.TokenType.EQUAL, "==");
+                    }
+                    else
+                    {
+                        Advance();
+                        return new Token(Token.TokenType.ASSIGN, "=");
+                    }
                 }
 
                 if (currentChar == ',')

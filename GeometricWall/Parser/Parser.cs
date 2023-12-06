@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using static GeometricWall.Token;
 using System.Xml.Linq;
 using System.Windows;
+using System.Reflection;
 
 namespace GeometricWall
 {
@@ -114,7 +115,6 @@ namespace GeometricWall
         private AST Var()
         {
             Var node = new(currentToken);
-
             if (currentToken.Type == Token.TokenType.ID)
                 Eat(TokenType.ID);
             else
@@ -133,20 +133,88 @@ namespace GeometricWall
                     return point;
                 case TokenType.CIRCLE:
                     Eat(TokenType.CIRCLE);
-                    CircleAST circle = new(Var());
-                    return circle;
+
+                    if (currentToken.Type == TokenType.LPAREN)
+                    {
+                        Eat(TokenType.LPAREN);
+
+                        AST center = Var();
+                        Eat(TokenType.COMMA);
+                        AST radius = Var();
+
+                        Eat(TokenType.RPAREN);
+
+                        CircleAST circle = new(new Var(new Token(TokenType.CIRCLE, "circle")), center, radius);
+                        return circle;
+                    }
+                    else
+                    {
+                        CircleAST circle = new(Var(), null, null);
+                        return circle;
+                    }
                 case TokenType.SEGMENT:
                     Eat(TokenType.SEGMENT);
-                    SegmentAST segement = new(Var());
-                    return segement;
+
+                    if (currentToken.Type == TokenType.LPAREN)
+                    {
+                        Eat(TokenType.LPAREN);
+
+                        AST p1 = Var();
+                        Eat(TokenType.COMMA);
+                        AST p2 = Var();
+
+                        Eat(TokenType.RPAREN);
+
+                        SegmentAST segment = new(new Var(new Token(TokenType.LINE, "line")), p1, p2);
+                        return segment;
+                    }
+                    else
+                    {
+                        SegmentAST segement = new(Var(), null, null);
+                        return segement;
+                    }
                 case TokenType.RAY:
                     Eat(TokenType.RAY);
-                    RayAST ray = new(Var());
-                    return ray;
+
+                    if (currentToken.Type == TokenType.LPAREN)
+                    {
+                        Eat(TokenType.LPAREN);
+
+                        AST p1 = Var();
+                        Eat(TokenType.COMMA);
+                        AST p2 = Var();
+
+                        Eat(TokenType.RPAREN);
+
+                        RayAST ray = new(new Var(new Token(TokenType.LINE, "line")), p1, p2);
+                        return ray;
+                    }
+                    else
+                    {
+                        RayAST ray = new(Var(), null, null);
+                        return ray;
+                    }
                 case TokenType.LINE:
                     Eat(TokenType.LINE);
-                    LineAST line = new(Var());
-                    return line;
+
+                    if (currentToken.Type == TokenType.LPAREN)
+                    {
+                        Eat(TokenType.LPAREN);
+
+                        AST p1 = Var();
+                        Eat(TokenType.COMMA);
+                        AST p2 = Var();
+
+                        Eat(TokenType.RPAREN);
+
+                        LineAST line = new(new Var(new Token(TokenType.LINE, "line")), p1, p2);
+                        return line;
+                    }
+                    else
+                    {
+                        LineAST line = new(Var(), null, null);
+                        return line;
+                    }
                 default:
                     break;
             }
@@ -156,8 +224,8 @@ namespace GeometricWall
 
         public AST DrawStatement()
         {
-            LinkedList<string> geometrics = new LinkedList<string>();
-            LinkedList<string> coordenadas = new LinkedList<string>();
+            LinkedList<AST> geometrics = new LinkedList<AST>();
+            LinkedList<AST> coordenadas = new LinkedList<AST>();
             string figure = "";
 
             if (currentToken.Type == TokenType.LKEY)
@@ -167,21 +235,21 @@ namespace GeometricWall
                 {
                     if (currentToken.Type == TokenType.ID)
                     {
-                        geometrics.AddLast(currentToken.Value);
-                        Eat(TokenType.ID);
+                        geometrics.AddLast(Var());
                     }
                     else
                         Eat(TokenType.COMMA);
                 }
                 Eat(TokenType.RKEY);
 
-
+                DrawStatement draw = new(geometrics, figure, null, null);
+                return draw;
             }
             else if (currentToken.Type == TokenType.ID)
             {
-                geometrics.AddLast(currentToken.Value);
-                Eat(TokenType.ID);
-                Eat(TokenType.SEMI);
+                geometrics.AddLast(Var());
+                DrawStatement draw = new(geometrics, figure, null, null);
+                return draw;
             }
             else
             {
@@ -210,54 +278,47 @@ namespace GeometricWall
                 }
 
                 Eat(TokenType.LPAREN);
-                while (currentToken.Type != TokenType.RPAREN)
-                {
-                    if (currentToken.Type == TokenType.ID)
-                    {
-                        coordenadas.AddLast(currentToken.Value);
-                        Eat(TokenType.ID);
-                    }
-                    else
-                        Eat(TokenType.COMMA);
 
-                }
+                AST param1 = Var();
+                Eat(TokenType.COMMA);
+                AST param2 = Var();
+
                 Eat(TokenType.RPAREN);
 
+                DrawStatement draw = new(geometrics, figure, param1, param2);
+                return draw;
             }
-
-            DrawStatement draw = new(geometrics, figure, coordenadas);
-
-            return draw;
         }
 
         public AST MeasureStatement()
         {
             Eat(TokenType.LPAREN);
-            Token[] tokens = new Token[2];
-            Token token;
-                
-            token = currentToken;
-            Eat(TokenType.ID);
-            tokens[0] = token;
 
+            AST p1 = Var();
             Eat(TokenType.COMMA);
+            AST p2 = Var();
 
-            token = currentToken;
-            Eat(TokenType.ID);
-            tokens[1] = token;
-
-
-            MessageBox.Show(currentToken.Type.ToString());
             Eat(TokenType.RPAREN);
-            MeasureStatement node = new(tokens[0], tokens[1]);
+
+            MeasureStatement node = new(p1, p2);
 
             return node;
         }
 
-        // TODO
         public AST ConstantStatement()
         {
-            return null;
+            AST node = Assign();
+            return node;
+        }
+
+        private AST Assign()
+        {
+            AST left = Var();
+            Token token = currentToken;
+            Eat(Token.TokenType.ASSIGN);
+            AST right = Statement();
+            Assign node = new(left, token, right);
+            return node;
         }
 
         public AST Statement()

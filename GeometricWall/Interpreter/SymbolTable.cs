@@ -8,120 +8,62 @@ namespace GeometricWall
 {
     public class SymbolTable : NodeVisitor
     {
-        private Dictionary<string, Point> PointList;
+        public enum VariableType
+        {
+            Double,
+            String,
+            Bool,
+            Circle,
+            Line,
+            Segment,
+            Ray,
+            Point
+        }
 
-        private Dictionary<string, Line> LineList;
-
-        private Dictionary<string, Circle> CircleList;
-
-        private Dictionary<string, Segment> SegmentList;
-
-        private Dictionary<string, Ray> RayList;
+        // Stack to store variable declarations in each environment
+        private Stack<Dictionary<string, Tuple<object, VariableType>>> SymbolStack;
 
         public SymbolTable()
         {
-            PointList = new Dictionary<string, Point>();
-            LineList = new Dictionary<string, Line>();
-            CircleList = new Dictionary<string, Circle>();
-            SegmentList = new Dictionary<string, Segment>();
-            RayList = new Dictionary<string, Ray>();
+            SymbolStack = new Stack<Dictionary<string, Tuple<object, VariableType>>>();
         }
 
-        public void AddGeometric(string name, string type = "")
+        public void PushTable()
         {
-            Random random = new Random();
-
-            switch (type)
-            {
-                case "point":
-                    if (PointList.ContainsKey(name))
-                        throw new ArgumentException("Ponit, " + name + " ya ha sido declarada");
-                    PointList[name] = new Point(name, random.Next(50, 500), random.Next(50, 500));
-                    break;
-                case "line":
-                    if (LineList.ContainsKey(name))
-                        throw new ArgumentException("Line, " + name + " ya ha sido declarada");
-                    LineList[name] = new Line(name, new Point("p1", random.Next(50, 500), random.Next(50, 500)), new Point("p2", random.Next(50, 500), random.Next(50, 500)));
-                    break;
-                case "segment":
-                    if (SegmentList.ContainsKey(name))
-                        throw new ArgumentException("Segment, " + name + " ya ha sido declarada");
-                    SegmentList[name] = new Segment(name, new Point("p1", random.Next(50, 500), random.Next(50, 500)), new Point("p2", random.Next(50, 500), random.Next(50, 500)));
-                    break;
-                case "ray":
-                    if (RayList.ContainsKey(name))
-                        throw new ArgumentException("Ray, " + name + " ya ha sido declarada");
-                    RayList[name] = new Ray(name, new Point("p1", random.Next(50, 500), random.Next(50, 500)), new Point("p2", random.Next(50, 500), random.Next(50, 500)));
-                    break;
-                case "circle":
-                    if (CircleList.ContainsKey(name))
-                        throw new ArgumentException("Circle, " + name + " ya ha sido declarada");
-                    CircleList[name] = new Circle(name, new Point("p1", random.Next(50, 500), random.Next(50, 500)), random.Next(25, 50));
-                    break;
-                default:
-                    break;
-            }
+            SymbolStack.Push(new Dictionary<string, Tuple<object, VariableType>>());
         }
 
-        public dynamic GetGeometric(string name)
+        // Deletes an environment
+        public Dictionary<string, Tuple<object, VariableType>> PopTable()
         {
-            if (PointList.ContainsKey(name))
+            if (SymbolStack.Count > 0)
             {
-                return PointList[name];
-            }
-            else if (CircleList.ContainsKey(name))
-            {
-                return CircleList[name];
-            }
-            else if (SegmentList.ContainsKey(name))
-            {
-                return SegmentList[name];
-            }
-            else if (RayList.ContainsKey(name))
-            {
-                return RayList[name];
-            }
-            else if (LineList.ContainsKey(name))
-            {
-                return LineList[name];
+                return SymbolStack.Pop();
             }
             else
-                throw new ArgumentException(name + "No ha sido declarado");
+                throw new Exception("Error");
         }
 
-        public Point GetPoint(string name)
+        // If an environment has been created, then add the variable declaration to the stack.
+        public void AddSymbol(string name, object value, VariableType type)
         {
-            if (!PointList.ContainsKey(name))
-                throw new ArgumentException("Point, " + name + " no ha sido declarada");
-            return PointList[name];
+            if (SymbolStack.Count > 0)
+            {
+                SymbolStack.Peek()[name] = Tuple.Create(value, type);
+            }
+            else
+                throw new Exception("Error");
         }
 
-        public Circle GetCircle(string name)
+        public Tuple<object, VariableType> GetSymbol(string name)
         {
-            if (!CircleList.ContainsKey(name))
-                throw new ArgumentException("Circle, " + name + " no ha sido declarada");
-            return CircleList[name];
-        }
+            foreach (var table in SymbolStack)
+            {
+                if (table.ContainsKey(name))
+                    return table[name];
+            }
 
-        public Segment GetSegment(string name)
-        {
-            if (!SegmentList.ContainsKey(name))
-                throw new ArgumentException("Segment, " + name + " no ha sido declarada");
-            return SegmentList[name];
-        }
-
-        public Line GetLine(string name)
-        {
-            if (!LineList.ContainsKey(name))
-                throw new ArgumentException("Line, " + name + " no ha sido declarada");
-            return LineList[name];
-        }
-
-        public Ray GetRay(string name)
-        {
-            if (!RayList.ContainsKey(name))
-                throw new ArgumentException("Ray, " + name + " no ha sido declarada");
-            return RayList[name];
+            throw new ArgumentException("'" + name + "' has not been declared");
         }
     }
 }
