@@ -165,7 +165,7 @@ namespace GeometricWall
 
                         Eat(TokenType.RPAREN);
 
-                        SegmentAST segment = new(new Var(new Token(TokenType.LINE, "line")), p1, p2);
+                        SegmentAST segment = new(new Var(new Token(TokenType.SEGMENT, "segment")), p1, p2);
                         return segment;
                     }
                     else
@@ -186,7 +186,7 @@ namespace GeometricWall
 
                         Eat(TokenType.RPAREN);
 
-                        RayAST ray = new(new Var(new Token(TokenType.LINE, "line")), p1, p2);
+                        RayAST ray = new(new Var(new Token(TokenType.RAY, "ray")), p1, p2);
                         return ray;
                     }
                     else

@@ -39,7 +39,7 @@ namespace GeometricWall
         {
             string name = node.ID.VarName;
             Random random = new Random();
-            Point p1 = new Point(name, random.Next(50, 500), random.Next(50, 500));
+            Point p1 = new Point(name, random.Next(250, 350), random.Next(250, 350));
             SymbolTable.AddSymbol(name, p1, SymbolTable.VariableType.Point);
 
             return node;
@@ -188,12 +188,12 @@ namespace GeometricWall
         public dynamic Visit_MeasureStatement(dynamic node)
         {
             string point1 = node.P1.VarName;
-            string point2 = node.P1.VarName;
+            string point2 = node.P2.VarName;
             
             Point p1 = (Point)SymbolTable.GetSymbol(point1).Item1;
             Point p2 = (Point)SymbolTable.GetSymbol(point2).Item1;
 
-            double distance = Math.Sqrt(Math.Pow(p2.X - p2.Y, 2) + Math.Pow(p2.Y - p1.Y, 2));
+            double distance = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
 
             return distance;
         }

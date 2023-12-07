@@ -18,6 +18,11 @@ namespace GeometricWall
         public string ID { get; set; }
         public double X { get; set; }
         public double Y { get; set; }
+
+        public override string ToString()
+        {
+            return "ID: " + ID + "(x: " + this.X + "y: " + this.Y + ")";
+        }
     }
 
     public class Circle

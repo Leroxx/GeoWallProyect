@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -21,8 +22,8 @@ namespace GeometricWall
         public void DrawPoint(Point p1)
         {
             Ellipse punto = new Ellipse();
-            punto.Height = 4;
-            punto.Width = 4;
+            punto.Height = 2;
+            punto.Width = 2;
             punto.Fill = Brushes.Black;
 
             double x = p1.X;
@@ -42,19 +43,14 @@ namespace GeometricWall
             double x = center.X;
             double y = center.Y;
 
-            // Crear el Path para la circunferencia
-            Path circunferencia = new Path();
+            Ellipse circunferencia = new Ellipse();
+            circunferencia.Width = radio * 2;
+            circunferencia.Height = radio * 2;
             circunferencia.Stroke = Brushes.Black;
-            circunferencia.StrokeThickness = 2;
+            circunferencia.Fill = Brushes.Transparent;
 
-            // Crear el EllipseGeometry para la circunferencia
-            EllipseGeometry ellipseGeometry = new EllipseGeometry();
-            ellipseGeometry.Center = new(x, y);
-            ellipseGeometry.RadiusX = radio;
-            ellipseGeometry.RadiusY = radio;
-
-            // Establecer el Geometry del Path como el EllipseGeometry
-            circunferencia.Data = ellipseGeometry;
+            Canvas.SetLeft(circunferencia, x - radio);
+            Canvas.SetTop(circunferencia, y - radio);
 
             DrawPoint(center);
             // Agregar la circunferencia al Canvas
@@ -71,7 +67,7 @@ namespace GeometricWall
 
 
             segmento.Stroke = Brushes.Black;
-            segmento.StrokeThickness = 2;
+            segmento.StrokeThickness = 1;
 
             DrawPoint(s1.P1);
             DrawPoint(s1.P2);
@@ -84,7 +80,7 @@ namespace GeometricWall
         {
             System.Windows.Shapes.Line recta = new();
             recta.Stroke = Brushes.Black;
-            recta.StrokeThickness = 2;
+            recta.StrokeThickness = 1;
             Point p1 = l1.P1;
             Point p2 = l1.P2;
 
