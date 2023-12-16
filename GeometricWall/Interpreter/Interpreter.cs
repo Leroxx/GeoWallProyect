@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Xml.Linq;
 using static GeometricWall.Token;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GeometricWall
 {
@@ -109,7 +111,7 @@ namespace GeometricWall
         {
             string name = node.ID.VarName;
 
-            if (name == "line")
+            if (name == "ray")
             {
                 var p1 = Visit(node.Point1);
                 var p2 = Visit(node.Point2);
@@ -198,46 +200,156 @@ namespace GeometricWall
             return distance;
         }
 
+        public dynamic Visit_IntersectStatement(dynamic node)
+        {
+            dynamic value1 = Visit(node.Value1);
+            dynamic value2 = Visit(node.Value2);
+
+            if (value1.GetType().Name == "Circle" && value2.GetType().Name == "Circle")
+                return Draw.FindCircleIntersections(value1, value2);
+            else if (LineType(value1) && LineType(value2))
+                return Draw.FindLineIntersection(value1, value2);
+            else if ((LineType(value1) && value2.GetType().Name == "Circle"))
+                return Draw.FindLineCircleIntersection(value1, value2);
+            else if (value1.GetType().Name == "Circle" && LineType(value2))
+                return Draw.FindLineCircleIntersection(value2, value1);
+            else
+                return null;
+        }
+
+        public bool LineType(dynamic line)
+        {
+            if (line.GetType().Name == "Line" || line.GetType().Name == "Segment" || line.GetType().Name == "Ray")
+                return true;
+            return false;
+        }
+
         public dynamic Visit_Assign(dynamic node)
         {
-            string name = node.Variable.VarName;
-            var value = Visit(node.Expression);
-
-            string method_name = value.GetType().Name;
-
-            switch (method_name)
+            if (node.Vars is not null)
             {
-                case "Circle":
-                    value.ID = name;
-                    SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Circle);
-                    break;
-                case "Segment":
-                    value.ID = name;
-                    SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Segment);
-                    break;
-                case "Line":
-                    value.ID = name;
-                    SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Line);
-                    break;
-                case "Ray":
-                    value.ID = name;
-                    SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Ray);
-                    break;
-            }
+                var secuencue = Visit(node.Expression);
+                int count = 0;
 
-            if (value is double)
+                foreach (Var var in node.Vars)
+                {
+                    if (secuencue[count] != null)
+                    {
+                        SymbolTable.AddSymbol(var.VarName, secuencue[count], SymbolTable.VariableType.Secuence);
+                    }
+                    else
+                        SymbolTable.AddSymbol(var.VarName, "", SymbolTable.VariableType.Undefine);
+                    count++;
+                }
+
+                return node;
+            }
+            else
             {
-                SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Double);
+                string name = node.Variable.VarName;
+                var value = Visit(node.Expression);
+
+                string method_name = value.GetType().Name;
+
+                switch (method_name)
+                {
+                    case "Point":
+                        value.ID = name;
+                        SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Point);
+                        break;
+                    case "Circle":
+                        value.ID = name;
+                        SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Circle);
+                        break;
+                    case "Segment":
+                        value.ID = name;
+                        SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Segment);
+                        break;
+                    case "Line":
+                        value.ID = name;
+                        SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Line);
+                        break;
+                    case "Ray":
+                        value.ID = name;
+                        SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Ray);
+                        break;
+                    default:
+                        break;
+                }
+
+                if (value is double)
+                {
+                    SymbolTable.AddSymbol(name, value, SymbolTable.VariableType.Double);
+                }
+                return name;
             }
-
-
-            return name;
         }
 
         public dynamic Visit_Var(dynamic node)
         {
             string name = node.VarName;
             return SymbolTable.GetSymbol(name).Item1;
+        }
+
+        public dynamic Visit_Secuence(dynamic node)
+        {
+            LinkedList<dynamic> values = new LinkedList<dynamic>();
+
+            foreach (var value in node.Values)
+            {
+                values.AddLast(Visit(value));
+            }
+
+            return values;
+        }
+
+        public dynamic Visit_LetIN(dynamic node)
+        {
+            SymbolTable.PushTable();
+
+            foreach (AST item in node.Expresions)
+            {
+                Visit(item);
+            }
+
+            var Value = Visit(node.InNode);
+            SymbolTable.PopTable();
+            return Value;
+        }
+
+        public dynamic Visit_IfElse(dynamic node)
+        {
+            if (Visit(node.Condition))
+                return Visit(node.IfBlock);
+            else
+                return Visit(node.ElseBlock);
+        }
+
+        // Send the data to save a function on the SymbolTable
+        public dynamic Visit_FunctionDeclaration(dynamic node)
+        {
+            List<string> parameters = new List<string>();
+
+            foreach (var item in node.Parameters)
+                parameters.Add(item.VarName);
+
+            SymbolTable.AddFunction(node.Name, parameters, node.Expression);
+            return node;
+        }
+
+        // Evaluate a function then have been declare
+        public dynamic Visit_FunctionCall(dynamic node)
+        {
+            List<object> parameters = new List<object>();
+
+            foreach (var item in node.Parameters)
+                parameters.Add(Visit(item));
+
+            AST result = SymbolTable.CallFunction(node.FunctionName, parameters);
+
+            var Value = Visit(result);
+            SymbolTable.PopTable();
+            return Value;
         }
 
         public dynamic Visit_BinOp(dynamic node)
@@ -262,6 +374,52 @@ namespace GeometricWall
             {
                 throw new Exception($"Unknown operator: {node.OP.Type}");
             }
+        }
+
+        public dynamic Visit_LogicOP(dynamic node)
+        {
+            if (node.OP.Type == TokenType.LESS_THAN)
+            {
+                return Visit(node.Left) < Visit(node.Right);
+            }
+            else if (node.OP.Type == TokenType.GREATER_THAN)
+            {
+                return Visit(node.Left) > Visit(node.Right);
+            }
+            else if (node.OP.Type == TokenType.LESS_THAN_OR_EQUAL)
+            {
+                return Visit(node.Left) <= Visit(node.Right);
+            }
+            else if (node.OP.Type == TokenType.GREATER_THAN_OR_EQUAL)
+            {
+                return Visit(node.Left) >= Visit(node.Right);
+            }
+            else if (node.OP.Type == TokenType.EQUAL)
+            {
+                return Visit(node.Left) == Visit(node.Right);
+            }
+            else if (node.OP.Type == TokenType.NOT_EQUAL)
+            {
+                return Visit(node.Left) != Visit(node.Right);
+            }
+
+            throw new Exception("Invalid operator");
+        }
+
+        public dynamic Visit_ANDNode(dynamic node)
+        {
+            if (Visit(node.Left) == 1 && Visit(node.Right) == 1)
+                return true;
+            else
+                return false;
+        }
+
+        public dynamic Visit_ORNode(dynamic node)
+        {
+            if (Visit(node.Left) == 1 || Visit(node.Right) == 1)
+                return true;
+            else
+                return false;
         }
 
         public dynamic Visit_UnaryOP(dynamic node)

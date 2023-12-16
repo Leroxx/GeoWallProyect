@@ -160,6 +160,18 @@ namespace GeometricWall
         public AST P2 { get; set; }
     }
 
+    public class IntersectStatement : AST
+    {
+        public IntersectStatement(AST value1, AST value2)
+        {
+            this.Value1 = value1;
+            this.Value2 = value2;
+        }
+
+        public AST Value1 { get; set; }
+        public AST Value2 { get; set; }
+    }
+
     public class Assign : AST
     {
         public Assign(AST var, Token op, AST expression)
@@ -169,9 +181,17 @@ namespace GeometricWall
             this.Expression = expression;
         }
 
+        public Assign(LinkedList<AST> vars, AST expression)
+        {
+            this.Vars = vars;
+            this.Expression = expression;
+        }
+
         public AST Variable { get; set; }
         public Token Token { get; set; }
         public AST Expression { get; set; }
+
+        public LinkedList<AST> Vars { get; set; }
     }
 
     public class Var : AST
@@ -182,5 +202,105 @@ namespace GeometricWall
         }
 
         public string VarName { get; set; }
+    }
+
+    public class Secuence : AST
+    {
+        public Secuence(LinkedList<AST> values)
+        {
+            this.Values = values;
+        }
+
+        public LinkedList<AST> Values { get; set; }
+    }
+
+    public class LetIN : AST
+    {
+        public LetIN(LinkedList<AST> expresions, AST inNode)
+        {
+            this.InNode = inNode;
+            this.Expresions = expresions;
+        }
+
+        public AST InNode { get; set; }
+        public LinkedList<AST> Expresions { get; set; }
+    }
+
+    public class IfElse : AST
+    {
+        public IfElse(AST ifBlock, AST condition, AST elseBlock)
+        {
+            this.IfBlock = ifBlock;
+            this.Condition = condition;
+            this.ElseBlock = elseBlock;
+        }
+
+        public AST IfBlock { get; set; }
+        public AST Condition { get; set; }
+        public AST ElseBlock { get; set; }
+    }
+
+    public class LogicOP : AST
+    {
+        public LogicOP(AST left, Token op, AST right)
+        {
+            this.Left = left;
+            this.OP = op;
+            this.Right = right;
+        }
+
+        public AST Left { get; set; }
+        public AST Right { get; set; }
+        public Token OP { get; set; }
+    }
+
+    public class ORNode : AST
+    {
+        public ORNode(AST left, AST right)
+        {
+            this.Left = left;
+            this.Right = right;
+        }
+
+        public AST Left { get; set; }
+        public AST Right { get; set; }
+    }
+
+    public class ANDNode : AST
+    {
+        public ANDNode(AST left, AST right)
+        {
+            this.Left = left;
+            this.Right = right;
+        }
+
+        public AST Left { get; set; }
+        public AST Right { get; set; }
+    }
+
+    public class FunctionDeclaration : AST
+    {
+        public FunctionDeclaration(string name, LinkedList<AST> parameters, AST expression)
+        {
+            this.Name = name;
+            this.Parameters = parameters;
+            this.Expression = expression;
+        }
+
+        public string Name { get; set; }
+        public LinkedList<AST> Parameters { get; set; }
+        public AST Expression { get; set; }
+    }
+
+    public class FunctionCall : AST
+    {
+        public FunctionCall(string name, List<AST> parameters)
+        {
+            this.FunctionName = name;
+            this.Parameters = parameters;
+        }
+
+        public string FunctionName { get; set; }
+        public List<AST> Parameters { get; set; }
     }
 }

@@ -246,7 +246,7 @@
                         Height="100"
                         Background="Transparent"
                         BorderBrush="Transparent"
-                        Margin="0,0,0,10">
+                        Margin="0,0,0,10" Click="Cargar_Click">
                     <!-- Image-->
                     <Image Source="Assets/icons8-abrir-carpeta-36.png"
                            Stretch="None">
@@ -257,7 +257,7 @@
                         Height="100"
                         Background="Transparent"
                         BorderBrush="Transparent"
-                        Margin="0,10,0,0">
+                        Margin="0,10,0,0" Click="Guardar_Click">
                     <!-- Image-->
                     <Image Source="Assets/home_icon.png"
                            Stretch="None">

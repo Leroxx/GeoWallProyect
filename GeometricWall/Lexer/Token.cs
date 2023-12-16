@@ -26,12 +26,28 @@ namespace GeometricWall
             LINE,
             ID,
             ASSIGN,
+            LET,
+            IN,
+            IF,
+            ELSE,
+            THEN,
+            MODULE,
+            LESS_THAN,
+            GREATER_THAN,
+            LESS_THAN_OR_EQUAL,
+            GREATER_THAN_OR_EQUAL,
             EQUAL,
-            LAMBDA,
+            NOT_EQUAL,
+            AND,
+            OR,
+            FUNCTION_CALL,
             DRAW,
             MEASURE,
             LKEY,
             RKEY,
+            UNDER_SCORE,
+            REST,
+            INTERSECT,
             EOF
         }
 
@@ -48,6 +64,13 @@ namespace GeometricWall
         {
             { "draw", new Token(TokenType.DRAW, "draw") },
             { "measure", new Token(TokenType.MEASURE, "measure") },
+            { "rest", new Token(TokenType.REST, "rest") },
+            { "intersect", new Token(TokenType.INTERSECT, "intersect") },
+            { "let", new Token(TokenType.LET, "let")},
+            { "in", new Token(TokenType.IN, "in")},
+            { "if", new Token(TokenType.IF, "if")},
+            { "else", new Token(TokenType.ELSE, "else")},
+            { "then", new Token(TokenType.THEN, "then")}
         };
         
         public static Dictionary<string, Token> GeometricDeclaration = new Dictionary<string, Token>()
@@ -58,6 +81,14 @@ namespace GeometricWall
             { "line", new Token(TokenType.LINE, "line") },
             { "ray", new Token(TokenType.RAY, "ray") }
         };
+
+        public static Dictionary<string, Token> LogicOperators = new Dictionary<string, Token>()
+        {
+            { "and", new Token(TokenType.AND, "point") },
+            { "or", new Token(TokenType.OR, "circle") }
+        };
+
+        public static List<string> Functions = new List<string>();
 
         public override string ToString()
         {

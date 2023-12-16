@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using static GeometricWall.Token;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -19,6 +20,7 @@ namespace GeometricWall
             this.text = text;
             this.pos = 0;
             this.currentChar = this.text[this.pos];
+            Functions.Clear();
         }
 
         private void Error(string messege)
@@ -56,6 +58,16 @@ namespace GeometricWall
                 return text[peek_pos];
         }
 
+        public Token PeekToken()
+        {
+            int peek_pos = pos;
+            Token token = GetNextToken();
+            pos = peek_pos;
+            currentChar = text[pos];
+
+            return token;
+        }
+
         public string Integer()
         {
             string result = "";
@@ -83,7 +95,6 @@ namespace GeometricWall
             return result;
         }
 
-        //TODO
         public Token ID()
         {
             string result = "";
@@ -96,13 +107,21 @@ namespace GeometricWall
 
             Token token;
 
-            if (Token.GeometricDeclaration.ContainsKey(result))
+            if (GeometricDeclaration.ContainsKey(result))
             {
-                token = Token.GeometricDeclaration[result];
+                token = GeometricDeclaration[result];
             }
-            else if (Token.ReserveKeyword.ContainsKey(result))
+            else if (ReserveKeyword.ContainsKey(result))
             {
-                token = Token.ReserveKeyword[result];
+                token = ReserveKeyword[result];
+            }
+            else if (LogicOperators.ContainsKey(result))
+            {
+                token = LogicOperators[result];
+            }
+            else if (Functions.Contains(result))
+            {
+                token = new Token(TokenType.FUNCTION_CALL, result);
             }
             else
             {
@@ -180,14 +199,15 @@ namespace GeometricWall
                     return new Token(TokenType.RKEY, "}");
                 }
 
+                if (currentChar == '%')
+                {
+                    Advance();
+                    return new Token(TokenType.MODULE, "%");
+                }
+
                 if (currentChar == '=')
                 {
-                    if (Peek() == '>')
-                    {
-                        Advance(); Advance();
-                        return new Token(Token.TokenType.LAMBDA, "=>");
-                    }
-                    else if (Peek() == '=')
+                    if (Peek() == '=')
                     {
                         Advance(); Advance();
                         return new Token(Token.TokenType.EQUAL, "==");
@@ -199,10 +219,53 @@ namespace GeometricWall
                     }
                 }
 
+                if (currentChar == '<')
+                {
+                    if (Peek() == '=')
+                    {
+                        Advance(); Advance();
+                        return new Token(Token.TokenType.LESS_THAN_OR_EQUAL, "<=");
+                    }
+                    else
+                    {
+                        Advance();
+                        return new Token(Token.TokenType.LESS_THAN, "<");
+                    }
+                }
+
+                if (currentChar == '>')
+                {
+                    if (Peek() == '=')
+                    {
+                        Advance(); Advance();
+                        return new Token(Token.TokenType.GREATER_THAN_OR_EQUAL, ">=");
+                    }
+                    else
+                    {
+                        Advance();
+                        return new Token(Token.TokenType.GREATER_THAN, ">");
+                    }
+                }
+
+                if (currentChar == '!')
+                {
+                    if (Peek() == '=')
+                    {
+                        Advance(); Advance();
+                        return new Token(Token.TokenType.NOT_EQUAL, "!=");
+                    }
+                }
+
                 if (currentChar == ',')
                 {
                     Advance();
                     return new Token(TokenType.COMMA, ",");
+                }
+
+                if (currentChar == '_')
+                {
+                    Advance();
+                    return new Token(TokenType.UNDER_SCORE, "_");
                 }
 
                 if (currentChar == ';')
