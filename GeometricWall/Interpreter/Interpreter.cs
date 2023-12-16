@@ -214,7 +214,7 @@ namespace GeometricWall
             else if (value1.GetType().Name == "Circle" && LineType(value2))
                 return Draw.FindLineCircleIntersection(value2, value1);
             else
-                return null;
+                throw new ArgumentException("Los objetos indicados a intersectar no son validos");
         }
 
         public bool LineType(dynamic line)

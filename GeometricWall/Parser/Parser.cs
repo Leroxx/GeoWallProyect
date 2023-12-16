@@ -23,9 +23,9 @@ namespace GeometricWall
             this.currentToken = this.lexer.GetNextToken();
         }
 
-        public void Error()
+        public void Error(Token token)
         {
-            throw new Exception("Invalid syntax");
+            throw new Exception("Invalid syntax el Token: " + token + "no era el token esperado");
         }
 
         public void Eat(TokenType tokenType)
@@ -36,7 +36,7 @@ namespace GeometricWall
             }
             else
             {
-                Error();
+                Error(currentToken);
             }
         }
 
@@ -272,7 +272,7 @@ namespace GeometricWall
                 default:
                     break;
             }
-            Error();
+            Error(currentToken);
             return null;
         }
 
@@ -307,7 +307,7 @@ namespace GeometricWall
             else
             {
                 if (currentToken.Type == TokenType.LPAREN)
-                    Error();
+                    Error(currentToken);
 
                 switch (currentToken.Type)
                 {
@@ -427,7 +427,7 @@ namespace GeometricWall
                 else if (currentToken.Type == TokenType.COMMA)
                     Eat(TokenType.COMMA);
                 else
-                    Error();
+                    Error(currentToken);
             }
             Eat(TokenType.RKEY);
 
